@@ -4,7 +4,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cinemapedia/presentation/providers/providers.dart';
 import 'package:cinemapedia/presentation/widgets/widgets.dart';
 
-
+/// ================================================================================
+/// VIEW: VISTA PRINCIPAL CON LISTAS DE PELÍCULAS
+/// ================================================================================
+/// 
+/// HomeView es un ConsumerStatefulWidget que muestra 4 categorías de películas
+/// en un CustomScrollView con listas horizontales. Es la vista principal después
+/// del login/splash.
+/// 
+/// RESPONSABILIDAD:
+/// - Inicializar la carga de 4 categorías en initState
+/// - Mostrar indicador de carga mientras llegan datos
+/// - Mostrar listas horizontales de película por categoría
+/// - Detectar scroll al final (infinite scroll) para cargar más películas
+/// 
+/// CATEGORÍAS MOSTRADAS:
+/// 1. En cines (nowPlaying): Películas actualmente en salas
+/// 2. Próximamente (upcoming): Estrenos próximos
+/// 3. Populares: Películas con mayor público
+/// 4. Mejor valoradas (topRated): Mejor puntuadas
+/// 
+/// FLUJO DE DATOS:
+/// 1. initState() llama loadNextPage() en 4 providers
+/// 2. Cada provider trae página 1 del API (máx ~20 películas)
+/// 3. initialLoadingProvider detecta cambios y muestra FullScreenLoader si carga
+/// 4. build() renders CustomScrollView con MoviesSlideshow + 4 MovieHorizontalListview
+/// 5. Al scroll a final de lista, loadNextPage() trae página siguiente
+/// 6. Riverpod actualiza estado y redibuja automáticamente
+/// 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({ super.key });
 
