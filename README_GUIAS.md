@@ -2,9 +2,11 @@
 
 ¡Bienvenido! Este directorio contiene **una guía exhaustiva** sobre cómo funciona la app Cinemapedia.
 
-**Versión:** 1.0 Completa  
+**Versión:** 1.1 Con Comentarios en Código  
 **Ultimo actualizado:** Marzo 2026  
-**Documentos:** 6 archivos (80+ páginas)
+**Documentos:** 6 archivos (80+ páginas) + Comentarios en código
+
+> 🆕 **NOVEDAD VERSIÓN 1.1**: El documento ANALISIS_CODIGO_LINEA_A_LINEA.md ahora es una guía de navegación rápida. Las explicaciones detalladas están como comentarios directamente en el código, haciéndolas más prácticas mientras programas.
 
 ---
 

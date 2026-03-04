@@ -1,3 +1,27 @@
+/// 🎬 PANTALLA DE DETALLES - movie_screen.dart
+///
+/// Muestra información completa de UNA película:
+/// - Poster grande
+/// - Título, año, duración
+/// - Sinopsis completa
+/// - Puntuación y votos
+/// - Elenco de actores
+/// - Botón de favoritos
+/// - Recomendaciones
+///
+/// PATRÓN:
+/// - ConsumerStatefulWidget para usar initState + ref.watch()
+/// - movieId llega como parámetro desde Go Router
+/// - initState: Carga los detalles de la película + actores
+/// - ref.watch(): Escucha cambios en provider
+///
+/// FLUJO DATOS:
+/// 1. Go Router pasa movieId a este widget
+/// 2. initState carga movieInfoProvider + actorsByMovieProvider
+/// 3. Providers obtienen datos de API
+/// 4. Widget se reconstruye con los datos
+/// 5. Muestra toda la información
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
@@ -7,11 +31,13 @@ import 'package:cinemapedia/domain/entities/movie.dart';
 import 'package:cinemapedia/presentation/providers/providers.dart';
 import 'package:cinemapedia/presentation/providers/movies/movie_info_provider.dart';
 
-
+/// Pantalla de detalles de una película
 class MovieScreen extends ConsumerStatefulWidget {
-
+  
+  /// Nombre para usar con GoRouter.pushNamed(MovieScreen.name)
   static const name = 'movie-screen';
-
+  
+  /// ID de la película a mostrar (viene por parámetro de ruta)
   final String movieId;
 
   const MovieScreen({
@@ -24,19 +50,25 @@ class MovieScreen extends ConsumerStatefulWidget {
 }
 
 class MovieScreenState extends ConsumerState<MovieScreen> {
-
+  
+  /// CARGA INICIAL: Obtiene detalles de película + actores
   @override
   void initState() {
     super.initState();
     
+    /// Carga detalles de la película
+    /// movieId viene de los parámetros de la ruta
     ref.read(movieInfoProvider.notifier).loadMovie(widget.movieId);
+    
+    /// Carga actores que aparecen en la película
     ref.read(actorsByMovieProvider.notifier).loadActors(widget.movieId);
-
   }
 
   @override
   Widget build(BuildContext context) {
-
+    /// Obtiene datos del provider: mapa {movieId -> Movie}
+    /// Si está en caché, lo devuelve rápido
+    /// Si cambia, widget se reconstruye
     final Movie? movie = ref.watch( movieInfoProvider )[widget.movieId];
 
     if ( movie == null ) {

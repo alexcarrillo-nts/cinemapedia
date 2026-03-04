@@ -1,901 +1,484 @@
-# 🔍 ANÁLISIS LÍNEA A LÍNEA - ARCHIVOS CLAVE
+# � ÍNDICE DE ARCHIVOS - Guía Rápida por Archivo
 
-Explicación detallada de los archivos más importantes con comentarios en cada línea.
+Esta página es tu **MAP** para navegar el código de la app. Cada archivo tiene **comentarios doc en el código** que explican qué hace y por qué.
 
----
+## ✨ Cambio Importante: Documentación en el Código
 
-## 📌 main.dart - El Punto de Entrada
+En lugar de explicaciones largas en este documento, ahora encontrarás **comentarios profesionales** directamente en cada archivo Dart. Cuando abras un archivo:
 
-```dart
-// ===== IMPORTACIONES =====
-import 'package:flutter/material.dart';
-// Importa el framework Flutter con widgets como Scaffold, etc.
+1. **Encabezado (primeras líneas)**: Explica QUÉ es el archivo
+2. **Comentarios inline**: Explican el CÓMO y el POR QUÉ
+3. **Doc comments** (///): Documentación de clases y métodos
 
-import 'package:cinemapedia/config/router/app_router.dart';
-// Importa la configuración de rutas (navigationador)
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-// Importa la librería para leer archivos .env
-
-import 'package:cinemapedia/config/theme/app_theme.dart';
-// Importa el tema visual (colores, fuentes, etc.)
-
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Importa Riverpod para gestión de estado reactiva
-
-
-// ===== FUNCIÓN MAIN (ENTRADA DE LA APP) =====
-Future<void> main() async {
-  // 'async' porque cargar .env es asincrónico (puede tardar)
-  
-  await dotenv.load(fileName: '.env');
-  // ESPERA a que cargue el archivo .env
-  // Si no existe el archivo, continúa de todas formas
-  // El .env contiene: THE_MOVIEDB_KEY=xxxxx
-
-  runApp(
-    // Define qué será la raíz de la app
-    const ProviderScope(
-      // ProviderScope habilita Riverpod en toda la app
-      // Sin esto, ref.watch() no funcionaría en ningún Widget
-      
-      child: MainApp()
-      // MainApp es el Widget raíz
-    ),
-  );
-}
-
-
-// ===== WIDGET PRINCIPAL =====
-class MainApp extends StatelessWidget {
-  // StatelessWidget = no tiene estado local
-  // (el estado global se maneja con Riverpod)
-  
-  const MainApp({super.key});
-  // Constructor const = puede compilarse en tiempo de compilación
-
-  @override
-  Widget build(BuildContext context) {
-    // BuildContext = contexto de construcción (información del árbol de widgets)
-    
-    return MaterialApp.router(
-      // MaterialApp.router = usa Go Router para navegación
-      // (NO es MaterialApp normal)
-      
-      routerConfig: appRouter,
-      // appRouter viene de app_router.dart
-      // Define todas las rutas de la app
-      // Ruta inicial: /home/0
-      // Rutas hijas: /home/0/movie/:id
-      
-      debugShowCheckedModeBanner: false,
-      // Quita la cinta de DEBUG en la esquina
-      // (ese texto "DEBUG" rojo/amarillo)
-      
-      theme: AppTheme().getTheme(),
-      // Aplica el tema visual a toda la app
-      // Material 3 con color principal azul (#2862F5)
-    );
-  }
-}
-```
-
-**¿Qué pasa en orden?**
-1. Se ejecuta `main()`
-2. Carga el archivo `.env` (espera con `await`)
-3. Inicia Flutter con `runApp()`
-4. `ProviderScope` envuelve todo (habilita Riverpod)
-5. `MainApp` se renderiza
-6. `MaterialApp.router` configura tema y rutas
-7. Go Router navega a `/home/0`
-8. Se muestra `HomeScreen` ✅
+**Ventaja**: La documentación viaja CON el código. Nunca te quedarás sin saber qué hace una línea.
 
 ---
 
-## 🛣️ app_router.dart - Navegación
+## 🎯 Estructura Rápida
 
-```dart
-import 'package:go_router/go_router.dart';
-// Go Router = librería de navegación moderna
+Haz Ctrl+Click en cualquier enlace para ir directamente al archivo.
 
-import 'package:cinemapedia/presentation/screens/screens.dart';
-// Importa todas las pantallas
+---
 
+## 🎯 Estructura Rápida
 
-// ===== CONFIGURACIÓN DEL ROUTER =====
-final appRouter = GoRouter(
-  // GoRouter es una variable global que define todas las rutas
-  
-  initialLocation: '/home/0',
-  // Ruta inicial cuando abre la app
-  // /home/0 = HomeScreen con pageIndex=0
-  
-  routes: [
-    // Array de todas las rutas posibles
-    
-    GoRoute(
-      path: '/home/:page',
-      // :page es un parámetro dinámico
-      // /home/0, /home/1, /home/2 → todas válidas
-      
-      name: HomeScreen.name,
-      // Nombre interno de la ruta (para referencias con pushNamed)
-      // HomeScreen.name = 'home-screen'
-      
-      builder: (context, state) {
-        // Función que construye el Widget para esta ruta
-        // state = información de la navegación
-        
-        final pageIndex = int.parse(state.params['page'] ?? '0');
-        // Extrae el parámetro :page
-        // Si no existe, usa '0' por defecto
-        // int.parse convierte String '0' → int 0
-        
-        return HomeScreen(pageIndex: pageIndex);
-        // Construye HomeScreen pasando el pageIndex
-      },
-      
-      routes: [
-        // Rutas ANIDADAS dentro de /home/:page
-        
-        GoRoute(
-          path: 'movie/:id',
-          // Ruta completa: /home/0/movie/505642
-          // Relativa a la ruta padre
-          
-          name: MovieScreen.name,
-          
-          builder: (context, state) {
-            final movieId = state.params['id'] ?? 'no-id';
-            // Extrae el ID de la película
-            // Si no existe, usa 'no-id'
-            
-            return MovieScreen(movieId: movieId);
-            // Construye la pantalla de detalles
-          },
-        ),
-      ],
-    ),
-    
-    
-    GoRoute(
-      path: '/',
-      // Ruta raíz
-      
-      redirect: (context, state) => '/home/0',
-      // Si accedes a /, redirige a /home/0
-      // Esto previene que la app se quede en una pantalla vacía
-    ),
-  ],
-);
 ```
-
-**Mapeo de rutas:**
-- `/` → redirige a `/home/0`
-- `/home/0` → `HomeScreen(pageIndex: 0)` - Películas
-- `/home/1` → `HomeScreen(pageIndex: 1)` - Categorías
-- `/home/2` → `HomeScreen(pageIndex: 2)` - Favoritas
-- `/home/0/movie/505642` → `MovieScreen(movieId: "505642")`
-
-**Cómo navegar:**
-```dart
-// Forma correcta 1: Usar nombre
-GoRouter.of(context).pushNamed(MovieScreen.name, params: {'id': '505642'});
-
-// Forma correcta 2: Usar ruta
-GoRouter.of(context).push('/home/0/movie/505642');
-
-// Forma correcta 3: Reemplazar pantalla
-GoRouter.of(context).go('/home/1');
+lib/
+├── main.dart                          ← INICIO aquí
+├── config/
+│   ├── constants/environment.dart     
+│   ├── helpers/human_formats.dart     
+│   ├── router/app_router.dart         ← RUTAS
+│   └── theme/app_theme.dart           
+├── domain/                            ← CONTRATOS (interfaces)
+│   ├── entities/
+│   │   ├── movie.dart
+│   │   └── actor.dart
+│   ├── datasources/
+│   │   ├── movies_datasource.dart
+│   │   └── actors_datasource.dart
+│   └── repositories/
+│       ├── movies_repository.dart
+│       └── actors_repository.dart
+├── infrastructure/                    ← IMPLEMENTACIÓN
+│   ├── datasources/
+│   │   ├── moviedb_datasource.dart
+│   │   └── actor_moviedb_datasource.dart
+│   ├── models/
+│   │   └── moviedb/
+│   │       ├── movie_moviedb.dart
+│   │       ├── moviedb_response.dart
+│   │       ├── movie_details.dart
+│   │       └── credits_response.dart
+│   ├── mappers/
+│   │   ├── movie_mapper.dart
+│   │   └── actor_mapper.dart
+│   └── repositories/
+│       ├── movie_repository_impl.dart
+│       └── actor_repository_impl.dart
+└── presentation/                      ← UI
+    ├── screens/
+    │   └── movies/
+    │       ├── home_screen.dart
+    │       └── movie_screen.dart
+    ├── views/
+    │   └── movies/
+    │       ├── home_view.dart
+    │       └── favorites_view.dart
+    ├── widgets/
+    │   ├── movies/
+    │   │   ├── movies_slideshow.dart
+    │   │   └── movie_horizontal_listview.dart
+    │   └── shared/
+    └── providers/
+        ├── movies/
+        │   ├── movies_repository_provider.dart
+        │   ├── movies_providers.dart
+        │   ├── initial_loading_provider.dart
+        │   ├── movies_slideshow_provider.dart
+        │   └── movie_info_provider.dart
+        └── actors/
+            ├── actors_repository_provider.dart
+            └── actors_by_movie_provider.dart
 ```
 
 ---
 
-## 🎯 presentation/providers/movies/movies_providers.dart - Gestor de Estado
+## 🔴 CONFIGURACIÓN (config/)
 
-```dart
-// ===== IMPORTACIONES =====
-import 'package:cinemapedia/domain/entities/movie.dart';
-// Movie = la entidad limpia que queremos
+### [main.dart](lib/main.dart)
+**INICIO DE LA APP**
 
-import 'package:cinemapedia/presentation/providers/movies/movies_repository_provider.dart';
-// Provider que proporciona el Repository
+Qué hace:
+- Carga variables de entorno (.env)
+- Inicia Flutter con Riverpod
+- Configura tema y rutas
+- Navega a pantalla inicial
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Riverpod para crear Providers
+---
 
+### [app_router.dart](lib/config/router/app_router.dart)
+**DEFINICIÓN DE RUTAS**
 
-// ===== DEFINICIÓN DEL PROVIDER =====
-final nowPlayingMoviesProvider = StateNotifierProvider<MoviesNotifier, List<Movie>>((ref) {
-  // StateNotifierProvider<T, S>
-  //   T = clase que maneja el estado (MoviesNotifier)
-  //   S = tipo del estado (List<Movie>)
-  //
-  // (ref) = parámetro que permite acceder a otros providers
-  
-  final fetchMoreMovies = ref.watch(movieRepositoryProvider).getNowPlaying;
-  // ref.watch = accede a movieRepositoryProvider y obtiene su valor
-  // .getNowPlaying = función para obtener películas en cines
-  // Tipo: Future<List<Movie>> Function({int page})
-  
-  return MoviesNotifier(
-    fetchMoreMovies: fetchMoreMovies
-    // Crea el Notifier pasándole la función
-  );
-});
+Qué hace:
+- Define todas las rutas de navegación
+- Pantalla inicial: `/home/0`
+- Rutas anidadas: `/home/:page/movie/:id`
+- Redirecciones
 
-// Igual para otras categorías de películas...
-final popularMoviesProvider = StateNotifierProvider<MoviesNotifier, List<Movie>>((ref) {
-  final fetchMoreMovies = ref.watch(movieRepositoryProvider ).getPopular;
-  return MoviesNotifier(fetchMoreMovies: fetchMoreMovies);
-});
+---
 
+### [app_theme.dart](lib/config/theme/app_theme.dart)
+**TEMA VISUAL**
 
-// ===== TIPO DE DATO PERSONALIZADO =====
-typedef MovieCallback = Future<List<Movie>> Function({ int page });
-// Define que MovieCallback es:
-// Una función async que recibe un parámetro page
-// y devuelve Future<List<Movie>>
+Qué hace:
+- Define colores (Material 3)
+- Define tipografía
+- Aplica a toda la app
 
+---
 
-// ===== CLASE QUE MANEJA EL ESTADO =====
-class MoviesNotifier extends StateNotifier<List<Movie>> {
-  // Extiende StateNotifier<T> donde T = tipo del estado
-  // En este caso: StateNotifier<List<Movie>>
-  
-  int currentPage = 0;
-  // Qué página vamos a cargar (empieza en 0)
-  
-  bool isLoading = false;
-  // Bandera: ¿están de cargando datos?
-  
-  MovieCallback fetchMoreMovies;
-  // Función para obtener películas desde el repository
-  
-  
-  MoviesNotifier({
-    required this.fetchMoreMovies,
-    // Constructor: recibe obligatoriamente fetchMoreMovies
-  }): super([]);
-  // super([]) = el estado inicial es una lista vacía
+### [environment.dart](lib/config/constants/environment.dart)
+**VARIABLES GLOBALES**
 
+Qué hace:
+- Carga API key desde `.env`
+- Proporciona const globales
 
-  Future<void> loadNextPage() async {
-    // Función pública que carga la siguiente página
-    
-    if (isLoading) return;
-    // Si ya estamos cargando, no hagas nada (evita peticiones dobles)
-    
-    isLoading = true;
-    // Marca que estamos cargando
-    
-    currentPage++;
-    // Pasa a la siguiente página (1, 2, 3, ...)
-    
-    // ⚡ PETICIÓN ASINCRÓNICA
-    final List<Movie> moreMovies = await fetchMoreMovies(page: currentPage);
-    // Llama la función fetchMoreMovies (que es repository.getNowPlaying)
-    // Espera con 'await' a que termine
-    // Devuelve List<Movie> con las nuevas películas
-    
-    state = [...state, ...moreMovies];
-    // ACTUALIZA EL ESTADO
-    // [...state] = spread operator (copia todos los elementos)
-    // [...state, ...moreMovies] = lista anterior + películas nuevas
-    // Esto NOTIFICA a todos los Widgets que hacen ref.watch()
-    
-    isLoading = false;
-    // Marca que terminó la carga
-  }
-}
+---
+
+### [human_formats.dart](lib/config/helpers/human_formats.dart)
+**FUNCIONES DE FORMATO**
+
+Qué hace:
+- Formatea fechas
+- Formatea números
+- Funciones auxiliares
+
+---
+
+## 🟠 LÓGICA DE NEGOCIO (domain/)
+
+### [movie.dart](lib/domain/entities/movie.dart)
+**ENTIDAD PELÍCULA**
+
+Qué hace:
+- Define estructura de una película
+- Campos: id, título, descripción, rating, etc.
+- Es una clase pura (sin lógica)
+
+---
+
+### [actor.dart](lib/domain/entities/actor.dart)
+**ENTIDAD ACTOR**
+
+Qué hace:
+- Define estructura de un actor
+- Campos: id, nombre, foto, personaje
+
+---
+
+### [movies_datasource.dart](lib/domain/datasources/movies_datasource.dart)
+**CONTRATO: "¿De dónde obtenemos películas?"**
+
+Qué hace:
+- Define interfaz abstracta
+- Métodos que deben implementarse:
+  - getNowPlaying()
+  - getPopular()
+  - getTopRated()
+  - getUpcoming()
+  - getMovieById()
+  - searchMovies()
+
+---
+
+### [actors_datasource.dart](lib/domain/datasources/actors_datasource.dart)
+**CONTRATO: "¿De dónde obtenemos actores?"**
+
+Qué hace:
+- Define interfaz abstracta
+- Método: getActorsByMovie()
+
+---
+
+### [movies_repository.dart](lib/domain/repositories/movies_repository.dart)
+**CONTRATO: "¿Qué operaciones hace la app con películas?"**
+
+Qué hace:
+- Define interfaz abstracta
+- Métodos públicos de la app
+
+---
+
+### [actors_repository.dart](lib/domain/repositories/actors_repository.dart)
+**CONTRATO: "¿Qué operaciones hace la app con actores?"**
+
+---
+
+## 🟡 IMPLEMENTACIÓN HTTP (infrastructure/)
+
+### [moviedb_datasource.dart](lib/infrastructure/datasources/moviedb_datasource.dart)
+**OBTIENE PELÍCULAS DE LA API**
+
+Qué hace:
+- Hace peticiones HTTP a themoviedb.org
+- Parsea JSON a objetos Dart
+- Usa Mapper para limpiar datos
+- Implementa contrato de domain/datasources
+
+---
+
+### [actor_moviedb_datasource.dart](lib/infrastructure/datasources/actor_moviedb_datasource.dart)
+**OBTIENE ACTORES DE LA API**
+
+---
+
+### [movie_moviedb.dart](lib/infrastructure/models/moviedb/movie_moviedb.dart)
+**MODELO: Película cruda de API**
+
+Qué hace:
+- Estructura de JSON sin procesar
+- Contiene método fromJson()
+- Tiene todos los campos de la API
+
+---
+
+### [moviedb_response.dart](lib/infrastructure/models/moviedb/moviedb_response.dart)
+**MODELO: Respuesta paginada de API**
+
+Qué hace:
+- Parsea respuesta paginada
+- Contiene List<MovieMovieDB>
+
+---
+
+### [movie_details.dart](lib/infrastructure/models/moviedb/movie_details.dart)
+**MODELO: Detalles completos de película**
+
+Qué hace:
+- Estructura de película con info adicional
+- Más campos que MovieMovieDB
+
+---
+
+### [credits_response.dart](lib/infrastructure/models/moviedb/credits_response.dart)
+**MODELO: Respuesta de actores de una película**
+
+Qué hace:
+- Parsea lista de actores/cast
+- Contiene List<Cast>
+
+---
+
+### [movie_mapper.dart](lib/infrastructure/mappers/movie_mapper.dart)
+**CONVIERTE: MovieMovieDB → Movie limpia**
+
+Qué hace:
+- Transforma datos crudos en entidades limpias
+- Arregla URLs (agrega dominio)
+- Maneja valores null
+- Método: movieDBToEntity()
+
+---
+
+### [actor_mapper.dart](lib/infrastructure/mappers/actor_mapper.dart)
+**CONVIERTE: Cast → Actor limpia**
+
+Qué hace:
+- Transforma actores crudos
+- Arregla URLs de fotos
+- Método: castToEntity()
+
+---
+
+### [movie_repository_impl.dart](lib/infrastructure/repositories/movie_repository_impl.dart)
+**IMPLEMENTA: MovieRepository (del domain)**
+
+Qué hace:
+- Implementa interfaz de domain/repositories
+- Delega operaciones al datasource
+- Punto medio entre business logic y datos
+
+---
+
+### [actor_repository_impl.dart](lib/infrastructure/repositories/actor_repository_impl.dart)
+**IMPLEMENTA: ActorsRepository (del domain)**
+
+---
+
+## 🟢 INTERFAZ DE USUARIO (presentation/)
+
+### [home_screen.dart](lib/presentation/screens/movies/home_screen.dart)
+**PANTALLA PRINCIPAL**
+
+Qué hace:
+- Pantalla completa con navegación
+- IndexedStack con 3 vistas
+- BottomNavigationBar
+- Alterna entre Home, Categorías, Favoritas
+
+---
+
+### [movie_screen.dart](lib/presentation/screens/movies/movie_screen.dart)
+**PANTALLA DE DETALLES**
+
+Qué hace:
+- Muestra detalles de una película
+- CustomScrollView (scroll complejo)
+- SliverAppBar (barra que se encoge)
+- Información de película + actores
+
+---
+
+### [home_view.dart](lib/presentation/views/movies/home_view.dart)
+**VISTA PRINCIPAL (lista de películas)**
+
+Qué hace:
+- Pide películas al iniciar (initState)
+- Watch a 4 providers
+- Muestra:
+  - Slideshow (carrusel)
+  - Películas en cines
+  - Próximamente
+  - Populares
+  - Top valoradas
+- Implements scroll infinito
+
+---
+
+### [favorites_view.dart](lib/presentation/views/movies/favorites_view.dart)
+**VISTA DE FAVORITAS**
+
+---
+
+### [movies_slideshow.dart](lib/presentation/widgets/movies/movies_slideshow.dart)
+**WIDGET: Carrusel de películas**
+
+---
+
+### [movie_horizontal_listview.dart](lib/presentation/widgets/movies/movie_horizontal_listview.dart)
+**WIDGET: Lista horizontal scrolleable**
+
+Qué hace:
+- Muestra películas en fila horizontal
+- Detecta scroll al final
+- Llama callback para cargar más
+
+---
+
+## 🔵 GESTIÓN DE ESTADO (presentation/providers/)
+
+### [movies_repository_provider.dart](lib/presentation/providers/movies/movies_repository_provider.dart)
+**PROVIDER: Repository inmutable**
+
+Qué hace:
+- Crea instancia de MovieRepositoryImpl
+- Proporciona acceso a repository
+- Usado por otros providers
+
+---
+
+### [movies_providers.dart](lib/presentation/providers/movies/movies_providers.dart)
+**PROVIDER: Estados de películas**
+
+Qué hace:
+- Define 4 providers (nowPlaying, popular, topRated, upcoming)
+- Cada uno maneja su propia lista con pagination
+- Clase MoviesNotifier con loadNextPage()
+
+---
+
+### [initial_loading_provider.dart](lib/presentation/providers/movies/initial_loading_provider.dart)
+**PROVIDER: ¿Estamos cargando?**
+
+Qué hace:
+- Devuelve true si algún provider está vacío
+- Usado para mostrar loader inicial
+
+---
+
+### [movies_slideshow_provider.dart](lib/presentation/providers/movies/movies_slideshow_provider.dart)
+**PROVIDER: Películas para slideshow**
+
+Qué hace:
+- Selecciona 5 películas random
+- Para carrusel de inicio
+
+---
+
+### [movie_info_provider.dart](lib/presentation/providers/movies/movie_info_provider.dart)
+**PROVIDER: Caché de películas por ID**
+
+Qué hace:
+- Almacena películas en Map<ID, Movie>
+- Evita peticiones repetidas
+- Clase MovieMapNotifier con loadMovie()
+
+---
+
+### [actors_repository_provider.dart](lib/presentation/providers/actors/actors_repository_provider.dart)
+**PROVIDER: Repository de actores**
+
+Qué hace:
+- Crea instancia ActorRepositoryImpl
+- Similar a movies_repository_provider
+
+---
+
+### [actors_by_movie_provider.dart](lib/presentation/providers/actors/actors_by_movie_provider.dart)
+**PROVIDER: Caché de actores por película**
+
+Qué hace:
+- Almacena actores en Map<movieID, List<Actor>>
+- Evita peticiones repetidas
+- Clase ActorsByMovieNotifier con loadActors()
+
+---
+
+## 🔀 Flujo completo de datos
+
 ```
-
-**Cómo se usa:**
-```dart
-final nowPlayingMovies = ref.watch(nowPlayingMoviesProvider);
-// nowPlayingMovies = List<Movie> actual
-// Si state cambia, el Widget se reconstruye
-
-ref.read(nowPlayingMoviesProvider.notifier).loadNextPage();
-// Lee el Notifier y llama loadNextPage()
-// No reconstruye el Widget
+Usuario abre app
+        ↓
+home_view.dart (initState)
+        ↓
+ref.read(provider.notifier).loadNextPage()
+        ↓
+MoviesNotifier.loadNextPage() [movies_providers.dart]
+        ↓
+repository.getNowPlaying() [movie_repository_impl.dart]
+        ↓
+datasource.getNowPlaying() [moviedb_datasource.dart]
+        ↓
+Dio.get() → API
+        ↓
+JSON response
+        ↓
+MovieMovieDB model [movie_moviedb.dart]
+        ↓
+MovieMapper.movieDBToEntity() [movie_mapper.dart]
+        ↓
+Movie entity [movie.dart]
+        ↓
+state actualizado [movies_providers.dart]
+        ↓
+home_view.dart detecta cambio (ref.watch)
+        ↓
+Widget rebuild
+        ↓
+Usuario ve películas
 ```
 
 ---
 
-## 🎬 infrastructure/datasources/moviedb_datasource.dart - Obtener Datos
+## 📍 Dónde está cada responsabilidad
 
-```dart
-import 'package:cinemapedia/infrastructure/models/moviedb/movie_details.dart';
-import 'package:dio/dio.dart';
-// Dio = cliente HTTP (como fetch en JavaScript)
-
-import 'package:cinemapedia/config/constants/environment.dart';
-// Env = variables de entorno (API key)
-
-import 'package:cinemapedia/domain/datasources/movies_datasource.dart';
-// MoviesDatasource = interfaz (contrato)
-
-import 'package:cinemapedia/infrastructure/mappers/movie_mapper.dart';
-// MovieMapper = convierte modelos
-
-import 'package:cinemapedia/infrastructure/models/moviedb/moviedb_response.dart';
-import 'package:cinemapedia/domain/entities/movie.dart';
-
-
-// ===== IMPLEMENTACIÓN DE DATASOURCE =====
-class MoviedbDatasource extends MoviesDatasource {
-  // Extiende MoviesDatasource (implementa su contrato)
-  // MoviesDatasource dice "tienes que implementar estos métodos"
-  
-  
-  // ===== CONFIGURACIÓN HTTP =====
-  final dio = Dio(BaseOptions(
-    // Dio = cliente HTTP
-    // BaseOptions = configuración por defecto para todas las peticiones
-    
-    baseUrl: 'https://api.themoviedb.org/3',
-    // URL BASE: todas las peticiones usa esta como prefijo
-    // GET /movie/now_playing → https://api.themoviedb.org/3/movie/now_playing
-    
-    queryParameters: {
-      // Parámetros que se añaden a TODAS las peticiones
-      
-      'api_key': Environment.theMovieDbKey,
-      // API key cargada desde .env
-      // Se envía en cada petición: ?api_key=xxxxx
-      
-      'language': 'es-ES'
-      // Idioma de respuestas: español España
-      // Se envía en cada petición: &language=es-ES
-    }
-  ));
-
-
-  // ===== MÉTODO PRIVADO: CONVERTIR JSON A MOVIES =====
-  List<Movie> _jsonToMovies(Map<String, dynamic> json) {
-    // Método privado (con _) = solo se usa dentro de esta clase
-    // Convierte JSON crudo → List<Movie> limpia
-    
-    final movieDBResponse = MovieDbResponse.fromJson(json);
-    // json = {"results": [{...}, {...}]}
-    // Convierte en objeto MovieDbResponse
-    // MovieDbResponse tiene un campo 'results' que es List<MovieMovieDB>
-    
-    final List<Movie> movies = movieDBResponse.results
-      // movieDBResponse.results = List<MovieMovieDB>
-      
-      .where((moviedb) => moviedb.posterPath != 'no-poster' )
-      // Filtra: solo películas con poster válido
-      // Quita películas sin imagen
-      
-      .map(
-        (moviedb) => MovieMapper.movieDBToEntity(moviedb)
-        // Convierte cada MovieMovieDB → Movie
-        // .map() transforma cada elemento en otro tipo
-      )
-      
-      .toList();
-    // Convierte el Iterable en List
-    
-    return movies;
-    // Devuelve List<Movie> limpia
-  }
-
-
-  // ===== MÉTODOS PÚBLICOS (Implementan el contrato) =====
-  
-  @override
-  // @override = estoy implementando un método de la clase padre
-  Future<List<Movie>> getNowPlaying({int page = 1}) async {
-    // async = es asincrónico (hace petición HTTP)
-    // {int page = 1} = parámetro opcional, defecto 1
-    // Devuelve Future<List<Movie>> = promesa de películas
-    
-    final response = await dio.get(
-      // dio.get = petición HTTP GET
-      // await = espera a que termine
-      
-      '/movie/now_playing',
-      // Ruta a petición (relativa a baseUrl)
-      // URL completa: https://api.themoviedb.org/3/movie/now_playing
-      
-      queryParameters: {
-        'page': page
-        // Parámetro adicional (además de los de BaseOptions)
-        // ?page=1&api_key=xxxx&language=es-ES
-      }
-    );
-    // response = respuesta HTTP
-    
-    return _jsonToMovies(response.data);
-    // response.data = JSON de la respuesta
-    // Convierte JSON → List<Movie>
-  }
-  
-  
-  @override
-  Future<List<Movie>> getPopular({int page = 1}) async {
-    // Exactamente igual, pero ruta diferente
-    
-    final response = await dio.get('/movie/popular', 
-      queryParameters: {
-        'page': page
-      }
-    );
-
-    return _jsonToMovies(response.data);    
-  }
-
-  // ... getTopRated, getUpcoming similares ...
-}
-```
-
-**¿Qué pasa en orden?**
-1. `getNowPlaying(page: 1)` se llama
-2. `dio.get('/movie/now_playing', queryParameters: {page: 1})`
-3. Se envía GET a `https://api.themoviedb.org/3/movie/now_playing?page=1&api_key=xxx&language=es-ES`
-4. API devuelve JSON: `{"results": [{...}, {...}]}`
-5. `_jsonToMovies()` convierte JSON → List<Movie>
-6. Devuelve `List<Movie>`
+| Responsabilidad | Archivo |
+|---|---|
+| Inicio app | [main.dart](lib/main.dart) |
+| Rutas | [app_router.dart](lib/config/router/app_router.dart) |
+| Tema | [app_theme.dart](lib/config/theme/app_theme.dart) |
+| API key | [environment.dart](lib/config/constants/environment.dart) |
+| Contratos | domain/datasources/, domain/repositories/ |
+| HTTP | [moviedb_datasource.dart](lib/infrastructure/datasources/moviedb_datasource.dart) |
+| Parseo JSON | infrastructure/models/ |
+| Transformación | infrastructure/mappers/ |
+| Implementación | infrastructure/repositories/ |
+| Pantallas | presentation/screens/ |
+| Vistas | presentation/views/ |
+| Componentes | presentation/widgets/ |
+| Estado | presentation/providers/ |
 
 ---
 
-## 🎯 infrastructure/mappers/movie_mapper.dart - Transformar Datos
+## 🎯 Cómo entender un archivo
 
-```dart
-import 'package:cinemapedia/domain/entities/movie.dart';
-// Movie = entidad limpia
-
-import 'package:cinemapedia/infrastructure/models/moviedb/movie_details.dart';
-import 'package:cinemapedia/infrastructure/models/moviedb/movie_moviedb.dart';
-// MovieMovieDB = modelo crudo del JSON
-
-
-// ===== CLASE CON MÉTODOS ESTÁTICOS =====
-class MovieMapper {
-  // Solo tiene métodos estáticos (no se instancia)
-  // Es como una "caja de herramientas" de conversiones
-  
-  
-  static Movie movieDBToEntity(MovieMovieDB moviedb) => Movie(
-    // Método estático: se llama como MovieMapper.movieDBToEntity()
-    // Recibe: MovieMovieDB (crudo del JSON)
-    // Devuelve: Movie (entidad limpia)
-    // => es sintaxis corta para "return"
-    
-    adult: moviedb.adult,
-    // Copia directo (no necesita transformación)
-    
-    backdropPath: (moviedb.backdropPath != '') 
-      // Si backdropPath NO está vacío
-      ? 'https://image.tmdb.org/t/p/w500${ moviedb.backdropPath }'
-      // Entonces: añade el URL base + ruta relativa
-      // Resultado: URL completa para descargar imagen
-      // ${} = interpolación de strings (como template literals)
-      
-      : 'https://sd.keepcalms.com/i-w600/keep-calm-poster-not-found.jpg'
-      // Si está vacío: usa imagen por defecto
-    
-    genreIds: moviedb.genreIds.map((e) => e.toString()).toList(),
-    // genreIds es List<int> [28, 12, 878]
-    // .map() convierte cada int → String
-    // Result: List<String> ["28", "12", "878"]
-    // (Aunque podría devolver directamente los ids como strings)
-    
-    id: moviedb.id,
-    // Copia
-    
-    originalLanguage: moviedb.originalLanguage,
-    originalTitle: moviedb.originalTitle,
-    overview: moviedb.overview,
-    popularity: moviedb.popularity,
-    
-    posterPath: (moviedb.posterPath != '')
-      ? 'https://image.tmdb.org/t/p/w500${ moviedb.posterPath }'
-      : 'https://www.movienewz.com/img/films/poster-holder.jpg',
-    // Igual que backdropPath
-    
-    releaseDate: moviedb.releaseDate != null 
-      ? moviedb.releaseDate! 
-      : DateTime.now(),
-    // Si releaseDate es null, usa fecha actual
-    // ! = null assertion (dice "confía en mí, no es null")
-    
-    title: moviedb.title,
-    video: moviedb.video,
-    voteAverage: moviedb.voteAverage,
-    voteCount: moviedb.voteCount
-  );
-}
-```
-
-**¿Por qué el Mapper es importante?**
-
-**Antes (crudo del JSON):**
-```dart
-MovieMovieDB movie = MovieMovieDB(
-  title: "Avatar",
-  posterPath: "/abc123.jpg",  // Relativo, incompleto
-  backdropPath: "",            // Vacío problemático
-  releaseDate: null,           // Puede ser null
-);
-```
-
-**Después (limpio con Mapper):**
-```dart
-Movie movie = Movie(
-  title: "Avatar",
-  posterPath: "https://image.tmdb.org/t/p/w500/abc123.jpg",  // URL completa
-  backdropPath: "https://placeholder.com/image.jpg",          // Nunca null
-  releaseDate: DateTime(2022, 12, 16),                        // Nunca null
-);
-```
+1. **Abre el archivo** con Ctrl+Click en el link
+2. **Lee los comentarios** que están en el código
+3. **Mira qué importa** (imagina el flujo)
+4. **Entiende qué devuelve** (output)
 
 ---
 
-## 👁️ presentation/views/movies/home_view.dart - Ver Datos
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-// ConsumerStatefulWidget = StatefulWidget + Riverpod
-
-import 'package:cinemapedia/presentation/providers/providers.dart';
-// Todos los providers
-import 'package:cinemapedia/presentation/widgets/widgets.dart';
-// Todos los widgets
-
-
-// ===== WIDGET CON ESTADO Y RIVERPOD =====
-class HomeView extends ConsumerStatefulWidget {
-  // ConsumerStatefulWidget = puede usar ref.watch() y ref.read()
-  // StatefulWidget = tiene estado local + initState()
-  
-  const HomeView({ super.key });
-
-  @override
-  HomeViewState createState() => HomeViewState();
-  // Crea el estado del widget
-}
-
-
-// ===== ESTADO DEL WIDGET =====
-class HomeViewState extends ConsumerState<HomeView> {
-  // ConsumerState = tiene acceso a ref (Riverpod)
-  
-  @override
-  void initState() {
-    // Se ejecuta UNA VEZ cuando el widget se monta
-    // PERFECTO para hacer peticiones iniciales
-    
-    super.initState();
-    // Llama inicialiación de la clase padre
-    
-    // ⚡ PIDE DATOS CUANDO ABRE LA PANTALLA ⚡
-    ref.read( nowPlayingMoviesProvider.notifier ).loadNextPage();
-    // ref.read() = obtén el Notifier (no escuches cambios)
-    // .notifier = accede al MoviesNotifier (no la lista)
-    // .loadNextPage() = llama la función para descargar películas
-    
-    ref.read( popularMoviesProvider.notifier ).loadNextPage();
-    ref.read( topRatedMoviesProvider.notifier ).loadNextPage();
-    ref.read( upcomingMoviesProvider.notifier ).loadNextPage();
-    // Mismo para otras categorías
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    // Se ejecuta CADA VEZ que hay un cambio en un provider
-    // o cuando el widget necesita rendericse
-    
-    // ===== ESCUCHA CAMBIOS =====
-    final initialLoading = ref.watch(initialLoadingProvider);
-    // ¿Estamos en la fase inicial de carga?
-    // Si algún provider está vacío, initialLoading = true
-    
-    if ( initialLoading ) return const FullScreenLoader();
-    // Mientras carga, muestra una pantalla de "Cargando..."
-    // (spinner + fondo oscuro)
-    
-    final slideShowMovies = ref.watch( moviesSlideshowProvider );
-    // Películas para el carrusel (5 películas destacadas)
-    
-    final nowPlayingMovies = ref.watch( nowPlayingMoviesProvider );
-    // Películas en cines (lista que se completa)
-    
-    final popularMovies = ref.watch( popularMoviesProvider );
-    // Películas populares
-    
-    final topRatedMovies = ref.watch( topRatedMoviesProvider );
-    // Mejores valoradas
-    
-    final upcomingMovies = ref.watch( upcomingMoviesProvider );
-    // Próximas películas
-    
-    // Cada ref.watch() hace que el Widget se reconstruya
-    // si ese provider cambia
-
-
-    return CustomScrollView(
-      // CustomScrollView = permite SliverWidgets (scrolls complejos)
-      
-      slivers: [
-        // Sliver = widget que se comporta bien en scroll
-        
-        const SliverAppBar(
-          // Barra superior que se encoge al scroll
-          
-          floating: true,
-          // Aparece cuando scrollea hacia arriba
-          
-          flexibleSpace: FlexibleSpaceBar(
-            title: CustomAppbar(),
-            // Widget personalizado en la barra
-          ),
-        ),
-
-
-        SliverList(
-          // Lista deslizable
-          delegate: SliverChildBuilderDelegate(
-            // Constructor: construye items dinámicamente
-            
-            (context, index) {
-              // index = posición en la lista (siempre 0 en este caso)
-              // porque solo hay 1 item (una Column)
-              
-              return Column(
-                // Una columna con TODAS las secciones
-                children: [
-            
-                  MoviesSlideshow(
-                    // Carrusel de películas destacadas
-                    movies: slideShowMovies
-                    // Pasa las películas del provider
-                  ),
-            
-                  MovieHorizontalListview(
-                    // Lista horizontal de películas en cines
-                    
-                    movies: nowPlayingMovies,
-                    // Las películas del provider
-                    
-                    title: 'En cines',
-                    subTitle: 'Lunes 20',
-                    
-                    loadNextPage: () =>
-                      // Callback: se llama cuando scroll llega al final
-                      ref.read(nowPlayingMoviesProvider.notifier)
-                        .loadNextPage()
-                      // Pide la siguiente página de películas
-                  ),
-            
-                  MovieHorizontalListview(
-                    movies: upcomingMovies,
-                    title: 'Próximamente',
-                    subTitle: 'En este mes',
-                    loadNextPage: () =>
-                      ref.read(upcomingMoviesProvider.notifier)
-                        .loadNextPage()
-                  ),
-            
-                  MovieHorizontalListview(
-                    movies: popularMovies,
-                    title: 'Populares',
-                    loadNextPage: () =>
-                      ref.read(popularMoviesProvider.notifier)
-                        .loadNextPage()
-                  ),
-                ],
-              );
-            },
-            
-            childCount: 1,
-            // Hay solo 1 item en la lista (la Column con todo)
-          ),
-        )
-      ],
-    );
-  }
-}
-```
-
-**¿Qué pasa en orden?**
-1. HomeView se monta → `initState()`
-2. `initState()` pide películas (4 peticiones HTTP simultáneamente)
-3. Mientras llegan, `initialLoadingProvider = true` → muestra loader
-4. Cuando llegan las películas, providers se actualizan
-5. `ref.watch()` detecta cambios → widget se reconstruye
-6. Se muestran las película en pantalla
-7. Usuario scrollea → cuando llega al final
-8. `MovieHorizontalListview` llama `loadNextPage()`
-9. Pide más películas, actua.liza el estado
-10. Más películas aparecen (scrolling infinito) ✅
-
----
-
-## 📊 presentation/providers/movies/movie_info_provider.dart - Caché de Películas
-
-```dart
-import 'package:cinemapedia/presentation/providers/providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cinemapedia/domain/entities/movie.dart';
-
-
-// ===== PROVIDER CON CACHÉ =====
-final movieInfoProvider = StateNotifierProvider<MovieMapNotifier, Map<String, Movie>>((ref) {
-  // StateNotifierProvider<T, S>
-  // T = MovieMapNotifier (clase que maneja el estado)
-  // S = Map<String, Movie> (tipo del estado)
-  
-  final movieRepository = ref.watch( movieRepositoryProvider );
-  // Obtiene el repository para llamar getMovieById
-  
-  return MovieMapNotifier(
-    getMovie: movieRepository.getMovieById
-    // Pasa la función para obtener películas por ID
-  );
-});
-
-
-/*
-  State es un Mapa (diccionario):
-  {
-    '505642': Movie(...),           // ID película → Película
-    '505643': Movie(...),           // ID película → Película
-    '505645': Movie(...),           // Cada película cacheada
-    '501231': Movie(...),
-  }
-*/
-
-
-// ===== TIPO DE DATO PERSONALIZADO =====
-typedef GetMovieCallback = Future<Movie>Function(String movieId);
-// Función que recibe un ID y devuelve una Película
-
-
-// ===== CLASE QUE MANEJA EL CACHÉ =====
-class MovieMapNotifier extends StateNotifier<Map<String,Movie>> {
-  // Extiende StateNotifier<T> donde T = Map<String, Movie>
-  // T = es un mapa que cachea películas por ID
-  
-  final GetMovieCallback getMovie;
-  // Función para obtener película de la API
-  
-  MovieMapNotifier({
-    required this.getMovie,
-  }): super({});
-  // super({}) = estado inicial = mapa vacío
-
-
-  Future<void> loadMovie( String movieId ) async {
-    // Carga una película específica por ID
-    
-    if ( state[movieId] != null ) return;
-    // ⚡ CACHÉ: si ya tenemos esa película, no pedirla de nuevo
-    // Si state['505642'] existe, no hace petición HTTP
-    
-    final movie = await getMovie( movieId );
-    // Petición HTTP: obtiene la película de la API
-    
-    state = { 
-      ...state,           // Expande el mapa anterior
-      movieId: movie      // Añade/actualiza una entrada
-    };
-    // Actualiza el estado (notifica a listeners)
-  }
-}
-```
-
-**¿Cómo funciona el caché?**
-
-**Vez 1: Usuario toca película 505642**
-```dart
-loadMovie('505642')
-  ↓
-state['505642'] == null    // No está en caché
-  ↓
-Pide a la API
-  ↓
-state = {'505642': Movie(...)}  // Cachea
-```
-
-**Vez 2: Usuario toca película 505642 de nuevo**
-```dart
-loadMovie('505642')
-  ↓
-state['505642'] != null    // YA ESTÁ EN CACHÉ
-  ↓
-return                      // NO pide a la API
-  ↓
-Instantáneo ⚡
-```
-
-Esto evita peticiones redundantes y hace la app más rápida.
-
----
-
-## 🔐 config/constants/environment.dart - API Key
-
-```dart
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-// flutter_dotenv = librería para leer .env
-
-
-class Environment {
-  // Clase con variables globales de configuración
-  
-  static String theMovieDbKey = dotenv.env['THE_MOVIEDB_KEY'] ?? 'No hay api key';
-  // static = variable de clase (no de instancia)
-  //   Se accede como Environment.theMovieDbKey (sin new)
-  // dotenv.env = diccionario con variables del .env
-  // ['THE_MOVIEDB_KEY'] = obtén el valor de esa clave
-  // ?? 'No hay api key' = si es null, usa este valor por defecto
-  
-  // Resultado:
-  // Si .env tiene: THE_MOVIEDB_KEY=xyz789
-  // Entonces: theMovieDbKey = "xyz789"
-  //
-  // Si .env no existe/está vacío:
-  // Entonces: theMovieDbKey = "No hay api key"
-}
-```
-
-**¿Dónde se usa?**
-```dart
-// En moviedb_datasource.dart
-final dio = Dio(BaseOptions(
-  baseUrl: 'https://api.themoviedb.org/3',
-  queryParameters: {
-    'api_key': Environment.theMovieDbKey,  // ← AQUÍ
-    'language': 'es-ES'
-  }
-));
-
-// La petición HTTP incluye: ?api_key=xyz789&language=es-ES
-```
-
----
-
-## 🎯 Resumen: Flujo de Una Función
-
-Cuando llamas `ref.read(nowPlayingMoviesProvider.notifier).loadNextPage()`:
-
-```
-1. ref.read(nowPlayingMoviesProvider.notifier)
-   → Obtiene MoviesNotifier
-
-2. .loadNextPage()
-   → Ejecuta la función
-
-3. if (isLoading) return;
-   → Evita peticiones dobles
-
-4. currentPage++
-   → Página 1
-
-5. await fetchMoreMovies(page: currentPage)
-   → Llama movieRepository.getNowPlaying(page: 1)
-   → que llama datasource.getNowPlaying(page: 1)
-   → que hace GET a /movie/now_playing?page=1...
-   → API devuelve JSON
-   → convierte JSON → MovieMovieDB → Movie
-   → devuelve List<Movie>
-
-6. state = [...state, ...moreMovies]
-   → Actualiza el estado (añade películas nuevas)
-   → NOTIFICA a todos los widgets que hacen ref.watch()
-
-7. isLoading = false
-   → Permite siguientes peticiones
-
-8. Los Widgets detectan cambio
-   → Se reconstruyen automáticamente
-   → Muestran las nuevas películas
-```
-
----
-
-¡Espero que esto ayude a entender el código! 🚀
+¡Usa los links para navegar rápidamente! 🚀
